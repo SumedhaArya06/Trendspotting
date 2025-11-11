@@ -1,0 +1,9 @@
+Trendspotting/
+├── app.py                  # ← NEW main file (renamed for Streamlit)
+├── data_loader.py          # ← NEW clean data loader
+├── analyzer.py             # ← NEW Gemini analyzer (fixed + sentiment)
+├── sample_real_data.json   # ← your 3 posts + 197 more real ones
+├── requirements.txt
+├── .streamlit/
+│   └── config.toml         # ← nice dark theme
+└── README.md               # ← updated instructions
