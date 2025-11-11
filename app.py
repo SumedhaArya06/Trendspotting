@@ -5,27 +5,39 @@ import requests
 from analyzer import analyze_trends
 
 st.set_page_config(page_title="Skincare Trendspotting", layout="wide")
-st.title("Skincare Trendspotting POC")
-st.success("Auto-loaded 200 real social media posts from your GitHub!")
+st.title(" Skincare Trendspotting POC")
+st.success("Auto-loading 200 real posts from GitHub...")
 
-# AUTO-LOAD DATA FROM YOUR GITHUB (no upload needed!)
-@st.cache_data(ttl=3600)  # refresh every hour
+@st.cache_data(ttl=3600)
 def load_github_data():
     url = "https://raw.githubusercontent.com/SumedhaArya06/Trendspotting/main/sample_real_data.json"
     response = requests.get(url)
-    data = response.json()
+    response.raise_for_status()  # Catch HTTP errors
+    raw_json = response.json()
+    
+    # FIX: Handle wrapped JSON {"data": [...]}
+    if "data" in raw_json:
+        data = raw_json["data"]
+    elif isinstance(raw_json, list):
+        data = raw_json
+    else:
+        raise ValueError("Unexpected JSON format")
+    
     return pd.DataFrame(data)
 
-df = load_github_data()
-st.write(f"Loaded **{len(df)} real posts** from Instagram, Twitter, TikTok")
-st.dataframe(df.head(10), height=300)
+try:
+    df = load_github_data()
+    st.success(f"Successfully loaded **{len(df)} real social media posts**!")
+    st.dataframe(df.head(10), height=300)
+except Exception as e:
+    st.error(f"Error loading data: {e}")
+    st.stop()
 
-if st.button("Run Gemini AI Analysis (Trend + Sentiment + Priority)", use_container_width=True):
-    with st.spinner("Gemini is analyzing 200 real consumer posts..."):
+if st.button(" Run Gemini AI Analysis (Trends + Sentiment + Priority)", use_container_width=True):
+    with st.spinner("Gemini analyzing 200 real consumer posts..."):
         trends = analyze_trends(df)
         st.session_state.trends = trends
         st.balloons()
-        st.success(f"Found {len(trends)} trends • Ranked by Market Potential")
 
 if "trends" in st.session_state:
     trends = st.session_state.trends
@@ -38,7 +50,7 @@ if "trends" in st.session_state:
         st.dataframe(top, use_container_width=True)
 
     with col2:
-        st.subheader("Sentiment Heatmap")
+        st.subheader("Market Potential Score")
         import altair as alt
         chart = alt.Chart(df_trends.head(15)).mark_bar().encode(
             x="trend:N",
@@ -48,8 +60,8 @@ if "trends" in st.session_state:
         st.altair_chart(chart, use_container_width=True)
 
     st.download_button(
-        "Download Full Report (JSON)",
+        " Download Full Report",
         data=json.dumps(trends, indent=2),
-        file_name=f"Trendspotting_Report_{pd.Timestamp.now().strftime('%Y%m%d')}.json",
+        file_name="Skincare_Trends_Report_Nov2025.json",
         mime="application/json"
     )
